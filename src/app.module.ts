@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
-import { IndexGateway } from './index.gateway';
-import { GroupGateway } from './group/group.gateway';
-import { ChannelGateway } from './channel/channel.gateway';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [],
   controllers: [],
-  providers: [IndexGateway, GroupGateway, ChannelGateway],
+  providers: [ChatGateway],
 })
 export class AppModule {}

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Chat App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-container {
+      width: 500px;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+    }
+    .chat-header {
+      background-color: #6200ea;
+      color: #fff;
+      padding: 16px;
+      font-size: 18px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ddd;
+      background-color: #fafafa;
+    }
+    .chat-input {
+      display: flex;
+      padding: 12px;
+      background-color: #fff;
+      border-top: 1px solid #ddd;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-right: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+    }
+    .chat-input button {
+      padding: 10px 20px;
+      background-color: #6200ea;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .chat-input button:hover {
+      background-color: #3700b3;
+    }
+    .message {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .message .sender {
+      font-weight: 600;
+      color: #6200ea;
+      font-size: 14px;
+    }
+    .message .text {
+      margin-top: 4px;
+      color: #333;
+      font-size: 14px;
+      background-color: #e8eaf6;
+      padding: 8px 12px;
+      border-radius: 8px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    .message .timestamp {
+      margin-top: 4px;
+      color: #888;
+      font-size: 12px;
+    }
+    .notification {
+      color: #888;
+      font-style: italic;
+      margin-bottom: 12px;
+      text-align: center;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">Modern Chat App</div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input">
+      <input type="text" id="message-input" placeholder="Type a message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const chatMessages = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('message-input');
+
+    const username = prompt('Enter your username:');
+    if (username) {
+      socket.emit('joinRoom', username);
+    }
+
+    socket.on('message', (data) => {
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+
+      const timestamp = new Date().toLocaleString('en-US', {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+      });
+
+      messageElement.innerHTML = `
+        <div class="sender">${data.username}</div>
+        <div class="text">${data.message}</div>
+        <div class="timestamp">${timestamp}</div>
+      `;
+      chatMessages.appendChild(messageElement);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    socket.on('userJoined', (username) => {
+      const notificationElement = document.createElement('div');
+      notificationElement.classList.add('notification');
+      notificationElement.textContent = `${username} joined the chat.`;
+      chatMessages.appendChild(notificationElement);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    socket.on('userLeft', (username) => {
+      const notificationElement = document.createElement('div');
+      notificationElement.classList.add('notification');
+      notificationElement.textContent = `${username} left the chat.`;
+      chatMessages.appendChild(notificationElement);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+
+    function sendMessage() {
+      const message = messageInput.value;
+      if (message) {
+        socket.emit('message', message);
+        messageInput.value = '';
+      }
+    }
+
+    window.addEventListener('beforeunload', () => {
+      socket.emit('leaveRoom');
+    });
+  </script>
+</body>
+</html>
